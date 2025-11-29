@@ -646,7 +646,8 @@
       >
         <!-- Selector de Categoría (Top Floating) -->
         <div
-          class="absolute top-16 left-0 w-full overflow-x-auto no-scrollbar px-6 z-20 flex gap-3 justify-center"
+          class="absolute top-16 left-0 w-full overflow-x-auto no-scrollbar pl-6 pr-6 z-20 flex gap-3 justify-start"
+          style="-webkit-overflow-scrolling: touch; scroll-snap-type: x proximity;"
         >
           <template x-for="(cat, index) in categories" :key="cat">
             <button
@@ -657,6 +658,7 @@
                 : 'bg-black/50 text-white/80 border-white/30 hover:bg-black/70 hover:border-white/50'"
               :style="`z-index: ${categories.length - index};`"
               x-text="cat"
+              style="scroll-snap-align: start;"
             ></button>
           </template>
         </div>

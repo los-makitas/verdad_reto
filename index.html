@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verdad o Reto - Parejas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      [x-cloak] {
+        display: none !important;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+      }
+
+      @keyframes gradient-xy {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+      .animate-bg {
+        background: linear-gradient(-45deg, #1a1a2e, #16213e, #4a1c40, #0f3460);
+        background-size: 400% 400%;
+        animation: gradient-xy 20s ease infinite;
+      }
+      .neon-text {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+          0 0 20px rgba(236, 72, 153, 0.5);
+      }
+
+      :root {
+        --wheel-size: 400px;
+      }
+      @media (max-width: 768px) {
+        :root {
+          --wheel-size: 320px;
+        }
+      }
+
+      .wheel-wrap {
+        width: var(--wheel-size);
+        height: var(--wheel-size);
+        position: relative;
+      }
+
+      .pointer {
+        width: 0;
+        height: 0;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        border-top: 30px solid white;
+        position: absolute;
+        top: calc(50% - var(--wheel-size) / 2 - 5px);
+        left: 50%;
+        transform: translateX(-50%);
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+        z-index: 50;
+      }
+
+      .centerBtn {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: calc(var(--wheel-size) * 0.28);
+        height: calc(var(--wheel-size) * 0.28);
+        border-radius: 50%;
+        background: #facc15;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6),
+          inset 0 2px 5px rgba(255, 255, 255, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+        z-index: 60;
+        color: #1f2937;
+        font-weight: 800;
+      }
+      .centerBtn:active {
+        transform: translate(-50%, -50%) scale(0.95);
+      }
+      svg {
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body
+    class="animate-bg text-white min-h-screen font-sans antialiased overflow-x-hidden selection:bg-pink-500 selection:text-white"
+  >
+    <script>
+      const JSON_URL =
+        "https://raw.githubusercontent.com/los-makitas/verdad_reto/refs/heads/main/database.json";
+
+      function secureRandom(min, max) {
+        const range = max - min + 1;
+        const bytes = new Uint32Array(1);
+        window.crypto.getRandomValues(bytes);
+        return min + (bytes[0] % range);
+      }
+
+      document.addEventListener("alpine:init", () => {
+        Alpine.data("gameLogic", () => ({
+          phase: "loading",
+          couples: [],
+          db: null,
+          categories: [],
+
+          newMan: "",
+          newWoman: "",
+          editingId: null,
+
+          currentCategory: "",
+          wheelRotation: 0,
+          isSpinning: false,
+          turnHistory: [],
+
+          selectedCoupleIndex: null,
+          selectedCouple: null,
+          selectedType: null,
+          currentChallengeText: "",
+
+          colors: [
+            "#ef4444",
+            "#3b82f6",
+            "#10b981",
+            "#a855f7",
+            "#eab308",
+            "#ec4899",
+            "#f97316",
+            "#6366f1",
+          ],
+
+          async init() {
+            try {
+              const response = await fetch(JSON_URL);
+              if (!response.ok) throw new Error("Error cargando DB");
+              this.db = await response.json();
+              this.categories = Object.keys(this.db);
+              if (this.categories.length > 0)
+                this.currentCategory = this.categories[0];
+            } catch (error) {
+              console.error(error);
+              alert("Error de conexión con las preguntas.");
+            }
+            this.loadCouplesFromStorage();
+            this.phase = "setup";
+            this.$nextTick(() => this.drawWheel());
+          },
+
+          loadCouplesFromStorage() {
+            const stored = localStorage.getItem("vr_couples");
+            if (stored) this.couples = JSON.parse(stored);
+          },
+
+          saveCouplesToStorage() {
+            localStorage.setItem("vr_couples", JSON.stringify(this.couples));
+            this.drawWheel();
+          },
+
+          addCouple() {
+            if (!this.newMan.trim() || !this.newWoman.trim()) return;
+            if (this.editingId) {
+              const index = this.couples.findIndex(
+                (c) => c.id === this.editingId
+              );
+              if (index !== -1) {
+                this.couples[index].man = this.newMan;
+                this.couples[index].woman = this.newWoman;
+              }
+              this.editingId = null;
+            } else {
+              this.couples.push({
+                id: Date.now(),
+                man: this.newMan,
+                woman: this.newWoman,
+                color: this.colors[this.couples.length % this.colors.length],
+              });
+            }
+            this.saveCouplesToStorage();
+            this.newMan = "";
+            this.newWoman = "";
+          },
+
+          editCouple(couple) {
+            this.newMan = couple.man;
+            this.newWoman = couple.woman;
+            this.editingId = couple.id;
+          },
+
+          cancelEdit() {
+            this.newMan = "";
+            this.newWoman = "";
+            this.editingId = null;
+          },
+
+          removeCouple(id) {
+            this.couples = this.couples.filter((c) => c.id !== id);
+            this.saveCouplesToStorage();
+            if (this.editingId === id) this.cancelEdit();
+          },
+
+          startGame() {
+            if (this.couples.length < 2) {
+              alert("Necesitas al menos 2 parejas.");
+              return;
+            }
+            this.turnHistory = [];
+            this.phase = "game";
+            this.wheelRotation %= 360;
+          },
+
+          spinWheel() {
+            if (this.isSpinning) return;
+            this.isSpinning = true;
+            this.phase = "spinning";
+
+            // --- NUEVA LÓGICA CON LÍMITE DE 3 REPETICIONES ---
+            let exclusionId = null;
+
+            // 1. Revisar si las últimas 3 jugadas fueron de la misma pareja.
+            if (this.turnHistory.length >= 3) {
+              const lastThree = this.turnHistory.slice(-3);
+              const isConsecutive = lastThree.every(
+                (id) => id === lastThree[0]
+              );
+              if (isConsecutive) {
+                exclusionId = lastThree[0]; // Si es así, se excluye a esta pareja.
+              }
+            }
+
+            // 2. Crear una lista de parejas elegibles.
+            let eligibleCouples = this.couples;
+            if (exclusionId) {
+              eligibleCouples = this.couples.filter(
+                (c) => c.id !== exclusionId
+              );
+            }
+
+            // 3. Fallback: Si la exclusión no deja a nadie (improbable), se ignora la regla.
+            if (eligibleCouples.length === 0) {
+              eligibleCouples = this.couples;
+            }
+
+            // 4. Elegir un ganador aleatorio de la lista de elegibles.
+            const winnerFromPool =
+              eligibleCouples[secureRandom(0, eligibleCouples.length - 1)];
+            const winnerIndex = this.couples.findIndex(
+              (c) => c.id === winnerFromPool.id
+            );
+            // --- FIN DE LA NUEVA LÓGICA ---
+
+            this.selectedCoupleIndex = winnerIndex;
+            this.selectedCouple = this.couples[winnerIndex];
+
+            // 5. Actualizar el historial con el nuevo ganador.
+            this.turnHistory.push(this.selectedCouple.id);
+            if (this.turnHistory.length > 10) {
+              // Mantenemos el historial con un tamaño razonable
+              this.turnHistory.shift();
+            }
+
+            const total = this.couples.length;
+            const segmentAngle = 360 / total;
+            const targetAngle = 360 - winnerIndex * segmentAngle;
+            const randomOffset =
+              Math.random() * (segmentAngle * 0.8) + segmentAngle * 0.1;
+            const spins = 5 + secureRandom(0, 3);
+
+            this.wheelRotation = 360 * spins + targetAngle - randomOffset;
+
+            setTimeout(() => {
+              this.isSpinning = false;
+              this.phase = "choice";
+            }, 5000);
+          },
+
+          selectType(type) {
+            this.selectedType = type;
+            this.generateChallenge();
+            this.phase = "result";
+          },
+
+          generateChallenge() {
+            if (this.db && this.db[this.currentCategory]) {
+              const list = this.db[this.currentCategory][this.selectedType];
+              this.currentChallengeText =
+                list[secureRandom(0, list.length - 1)];
+            }
+          },
+
+          nextTurn() {
+            this.phase = "game";
+            this.selectedCouple = null;
+            this.selectedType = null;
+          },
+
+          escapeHtml(str) {
+            const map = {
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            };
+            return str.replace(/[&<>"']/g, (m) => map[m]);
+          },
+
+          arcPath(x, y, r, start, end) {
+            const s = ((start - 90) * Math.PI) / 180;
+            const e = ((end - 90) * Math.PI) / 180;
+            const x1 = x + r * Math.cos(s);
+            const y1 = y + r * Math.sin(s);
+            const x2 = x + r * Math.cos(e);
+            const y2 = y + r * Math.sin(e);
+            return `M ${x} ${y} L ${x1} ${y1} A ${r} ${r} 0 ${
+              end - start > 180 ? 1 : 0
+            } 1 ${x2} ${y2} Z`;
+          },
+
+          drawWheel() {
+            const wheel = this.$refs.wheelSvg;
+            if (!wheel) return;
+
+            wheel.innerHTML = "";
+            const total = this.couples.length;
+            if (total === 0) return;
+
+            const step = 360 / total;
+            const radius = 48;
+
+            for (let i = 0; i < total; i++) {
+              const couple = this.couples[i];
+              const start = i * step;
+              const end = start + step;
+
+              wheel.insertAdjacentHTML(
+                "beforeend",
+                `<path d="${this.arcPath(50, 50, radius, start, end)}" fill="${
+                  couple.color
+                }"></path>`
+              );
+
+              const mid = start + step / 2;
+              const r = 30;
+              const rad = ((mid - 90) * Math.PI) / 180;
+              const tx = 50 + r * Math.cos(rad);
+              const ty = 50 + r * Math.sin(rad);
+
+              const nameText = this.escapeHtml(
+                `${couple.man} & ${couple.woman}`
+              );
+              const fontSize = total > 6 ? 3.5 : total > 4 ? 4.5 : 5.5;
+
+              wheel.insertAdjacentHTML(
+                "beforeend",
+                `<text x="${tx}" y="${ty}" font-size="${fontSize}" fill="white" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(${mid}, ${tx}, ${ty})">${nameText}</text>`
+              );
+            }
+          },
+        }));
+      });
+    </script>
+
+    <div
+      x-data="gameLogic"
+      class="min-h-screen flex flex-col items-center justify-center p-4 relative"
+    >
+      <h1
+        class="text-4xl md:text-6xl font-black mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 drop-shadow-sm"
+      >
+        VERDAD O RETO<br />
+        <span
+          class="text-xl md:text-2xl text-white/80 font-light tracking-widest"
+          >EDICIÓN PAREJAS</span
+        >
+      </h1>
+
+      <!-- SETUP -->
+      <div
+        x-show="phase === 'setup'"
+        x-transition
+        class="w-full max-w-lg glass-panel p-6 rounded-3xl"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">Jugadores</h2>
+          <span class="text-xs bg-white/10 px-2 py-1 rounded text-white/60"
+            >Auto-guardado</span
+          >
+        </div>
+
+        <div class="space-y-4 mb-6">
+          <div class="flex gap-2">
+            <input
+              type="text"
+              x-model="newMan"
+              placeholder="Él"
+              class="w-1/2 p-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-pink-500 outline-none"
+            />
+            <input
+              type="text"
+              x-model="newWoman"
+              placeholder="Ella"
+              class="w-1/2 p-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-pink-500 outline-none"
+            />
+          </div>
+          <div class="flex gap-2">
+            <button
+              x-show="editingId"
+              @click="cancelEdit"
+              class="w-1/3 bg-gray-600 rounded-xl font-bold py-3 hover:bg-gray-500 transition"
+            >
+              Cancelar
+            </button>
+            <button
+              @click="addCouple"
+              class="flex-1 bg-pink-600 hover:bg-pink-500 py-3 rounded-xl font-bold transition"
+            >
+              <span
+                x-text="editingId ? 'Guardar Cambios' : 'Agregar Pareja'"
+              ></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-2 max-h-60 overflow-y-auto mb-6 custom-scrollbar">
+          <template x-for="(c, i) in couples" :key="c.id">
+            <div
+              class="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  :style="`background:${c.color}`"
+                  class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow"
+                >
+                  <span x-text="i+1"></span>
+                </div>
+                <div class="text-sm">
+                  <span class="text-blue-300 font-bold" x-text="c.man"></span> &
+                  <span class="text-pink-300 font-bold" x-text="c.woman"></span>
+                </div>
+              </div>
+              <div class="flex gap-1">
+                <button
+                  @click="editCouple(c)"
+                  class="p-2 text-blue-300 hover:bg-white/10 rounded"
+                >
+                  <i class="fas fa-pencil"></i>
+                </button>
+                <button
+                  @click="removeCouple(c.id)"
+                  class="p-2 text-red-400 hover:bg-white/10 rounded"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <button
+          @click="startGame"
+          :disabled="couples.length < 2"
+          class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 py-4 rounded-xl font-black text-xl shadow-lg hover:scale-[1.02] transition disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
+        >
+          ¡A JUGAR!
+        </button>
+      </div>
+
+      <!-- JUEGO / RULETA -->
+      <div
+        x-show="phase === 'game' || phase === 'spinning' || phase === 'choice'"
+        x-transition
+        class="flex flex-col items-center w-full"
+      >
+        <div class="flex flex-wrap justify-center gap-2 mb-8 z-20">
+          <template x-for="cat in categories" :key="cat">
+            <button
+              @click="currentCategory = cat"
+              class="px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider transition border border-white/20"
+              :class="currentCategory === cat ? 'bg-white text-purple-900 scale-105' : 'bg-black/40 text-white/60 hover:bg-black/60'"
+              x-text="cat"
+            ></button>
+          </template>
+        </div>
+
+        <div class="wheel-wrap">
+          <div class="pointer"></div>
+
+          <svg
+            x-ref="wheelSvg"
+            viewBox="0 0 100 100"
+            class="w-full h-full rounded-full shadow-2xl"
+            :style="`transform: rotate(${wheelRotation}deg); transition: ${isSpinning ? 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none'};`"
+          ></svg>
+
+          <div
+            x-show="phase === 'game'"
+            @click="spinWheel"
+            class="centerBtn"
+            x-transition
+          >
+            <i class="fas fa-sync-alt text-2xl mb-1"></i>
+            <span class="text-lg uppercase">Girar</span>
+          </div>
+        </div>
+
+        <p
+          x-show="phase === 'spinning'"
+          class="mt-8 text-2xl font-bold animate-bounce text-yellow-300"
+          x-transition
+        >
+          ¡Girando la ruleta!
+        </p>
+      </div>
+
+      <!-- MODAL ELECCIÓN -->
+      <div
+        x-show="phase === 'choice'"
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      >
+        <div
+          class="glass-panel p-8 rounded-3xl max-w-md w-full text-center"
+          x-transition:enter="transition ease-out duration-300"
+          x-transition:enter-start="scale-90 opacity-0"
+          x-transition:enter-end="scale-100 opacity-100"
+        >
+          <h3 class="text-3xl font-bold mb-2">
+            ¡Turno de
+            <span
+              class="text-yellow-400"
+              x-text="selectedCouple ? selectedCouple.man : ''"
+            ></span>
+            y
+            <span
+              class="text-pink-400"
+              x-text="selectedCouple ? selectedCouple.woman : ''"
+            ></span
+            >!
+          </h3>
+          <p class="text-white/60 mb-8">Elige tu destino...</p>
+          <div class="grid grid-cols-2 gap-4">
+            <button
+              @click="selectType('verdad')"
+              class="bg-blue-600 hover:bg-blue-500 p-6 rounded-2xl transition transform hover:-translate-y-1 shadow-xl"
+            >
+              <div class="text-4xl mb-2">
+                <i class="fas fa-comment-dots"></i>
+              </div>
+              <div class="font-bold text-lg">VERDAD</div>
+            </button>
+            <button
+              @click="selectType('reto')"
+              class="bg-red-600 hover:bg-red-500 p-6 rounded-2xl transition transform hover:-translate-y-1 shadow-xl"
+            >
+              <div class="text-4xl mb-2"><i class="fas fa-fire"></i></div>
+              <div class="font-bold text-lg">RETO</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL RESULTADO -->
+      <div
+        x-show="phase === 'result'"
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+      >
+        <div
+          class="bg-[#1e1e2e] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-white/10"
+          x-transition:enter="transition ease-out duration-500"
+          x-transition:enter-start="translate-y-full opacity-0"
+          x-transition:enter-end="translate-y-0 opacity-100"
+        >
+          <div
+            :class="selectedType === 'verdad' ? 'bg-blue-600' : 'bg-red-600'"
+            class="p-4 text-center font-bold tracking-widest text-lg uppercase shadow-lg"
+          >
+            <i
+              :class="selectedType === 'verdad' ? 'fas fa-comment-dots' : 'fas fa-fire'"
+              class="mr-2"
+            ></i>
+            <span x-text="selectedType"></span> -
+            <span x-text="currentCategory"></span>
+          </div>
+          <div class="p-10 text-center">
+            <p
+              class="text-2xl md:text-3xl font-medium leading-relaxed neon-text mb-8"
+              x-text="currentChallengeText"
+            ></p>
+            <button
+              @click="nextTurn"
+              class="bg-gradient-to-r from-purple-500 to-pink-500 text-white w-full py-4 rounded-xl font-bold hover:scale-105 transition shadow-lg"
+            >
+              <i class="fas fa-arrow-right mr-2"></i>
+              Continuar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

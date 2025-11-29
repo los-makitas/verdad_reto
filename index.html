@@ -2,121 +2,182 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verdad o Reto - Parejas</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Verdad o Reto - Ultimate</title>
+    <!-- TailwindCSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- AlpineJS -->
     <script
       defer
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"
     ></script>
+    <!-- FontAwesome -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
+    <!-- Google Fonts (Inter para toque moderno) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
 
     <style>
+      :root {
+        --primary: #ec4899; /* Pink 500 */
+        --secondary: #8b5cf6; /* Violet 500 */
+        --dark-bg: #0f172a; /* Slate 900 */
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--dark-bg);
+        overflow: hidden; /* Evita scroll en app mode */
+        touch-action: manipulation;
+      }
+
       [x-cloak] {
         display: none !important;
       }
-      .glass-panel {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+
+      /* Fondo Animado Sutil */
+      .blob {
+        position: absolute;
+        filter: blur(80px);
+        z-index: 0;
+        opacity: 0.4;
+        animation: float 10s infinite ease-in-out;
       }
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
+      .blob-1 {
+        top: -10%;
+        left: -10%;
+        width: 50vw;
+        height: 50vw;
+        background: var(--primary);
+        animation-delay: 0s;
       }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
+      .blob-2 {
+        bottom: -10%;
+        right: -10%;
+        width: 60vw;
+        height: 60vw;
+        background: var(--secondary);
+        animation-delay: 5s;
       }
 
-      @keyframes gradient-xy {
-        0% {
-          background-position: 0% 50%;
+      @keyframes float {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
         }
         50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-      .animate-bg {
-        background: linear-gradient(-45deg, #1a1a2e, #16213e, #4a1c40, #0f3460);
-        background-size: 400% 400%;
-        animation: gradient-xy 20s ease infinite;
-      }
-      .neon-text {
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
-          0 0 20px rgba(236, 72, 153, 0.5);
-      }
-
-      :root {
-        --wheel-size: 400px;
-      }
-      @media (max-width: 768px) {
-        :root {
-          --wheel-size: 320px;
+          transform: translate(20px, -20px) scale(1.1);
         }
       }
 
-      .wheel-wrap {
-        width: var(--wheel-size);
-        height: var(--wheel-size);
+      /* Glassmorphism Classes */
+      .glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .glass-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* Ruleta Responsiva */
+      .wheel-container {
+        width: 90vw;
+        height: 90vw;
+        max-width: 500px;
+        max-height: 500px;
         position: relative;
+        filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
       }
 
-      .pointer {
-        width: 0;
-        height: 0;
-        border-left: 20px solid transparent;
-        border-right: 20px solid transparent;
-        border-top: 30px solid white;
+      .pointer-arrow {
         position: absolute;
-        top: calc(50% - var(--wheel-size) / 2 - 5px);
+        top: -20px;
         left: 50%;
         transform: translateX(-50%);
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
         z-index: 50;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
       }
 
-      .centerBtn {
+      /* Botón central integrado */
+      .spin-btn {
         position: absolute;
-        left: 50%;
         top: 50%;
+        left: 50%;
         transform: translate(-50%, -50%);
-        width: calc(var(--wheel-size) * 0.28);
-        height: calc(var(--wheel-size) * 0.28);
+        width: 25%;
+        height: 25%;
         border-radius: 50%;
-        background: #facc15;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6),
-          inset 0 2px 5px rgba(255, 255, 255, 0.3);
+        background: radial-gradient(circle at 30% 30%, #ffffff, #e2e8f0);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5),
+          inset 0 -5px 10px rgba(0, 0, 0, 0.1);
+        z-index: 60;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: transform 0.15s ease;
-        z-index: 60;
-        color: #1f2937;
-        font-weight: 800;
+        border: 4px solid rgba(255, 255, 255, 0.8);
       }
-      .centerBtn:active {
+
+      .spin-btn:active {
         transform: translate(-50%, -50%) scale(0.95);
       }
-      svg {
-        user-select: none;
+
+      /* Animación de entrada */
+      .slide-up {
+        animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes slideUp {
+        from {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .pop-in {
+        animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes popIn {
+        from {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      /* Scroll oculta para categorías */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
     </style>
   </head>
   <body
-    class="animate-bg text-white min-h-screen font-sans antialiased overflow-x-hidden selection:bg-pink-500 selection:text-white"
+    class="text-white h-[100dvh] w-screen overflow-hidden flex flex-col items-center justify-center relative"
   >
+    <!-- Alpine Logic (Mismo núcleo, nueva estructura visual) -->
     <script>
       const JSON_URL =
         "https://raw.githubusercontent.com/los-makitas/verdad_reto/refs/heads/main/database.json";
@@ -130,34 +191,36 @@
 
       document.addEventListener("alpine:init", () => {
         Alpine.data("gameLogic", () => ({
-          phase: "loading",
+          phase: "loading", // loading, setup, game, spinning, choice, result
           couples: [],
           db: null,
           categories: [],
 
+          // Form vars
           newMan: "",
           newWoman: "",
           editingId: null,
 
+          // Game vars
           currentCategory: "",
           wheelRotation: 0,
           isSpinning: false,
           turnHistory: [],
 
-          selectedCoupleIndex: null,
           selectedCouple: null,
-          selectedType: null,
+          selectedType: null, // 'verdad' or 'reto'
           currentChallengeText: "",
 
+          // Paleta moderna y vibrante
           colors: [
-            "#ef4444",
-            "#3b82f6",
-            "#10b981",
-            "#a855f7",
-            "#eab308",
-            "#ec4899",
-            "#f97316",
-            "#6366f1",
+            "#F43F5E", // Rose 500
+            "#3B82F6", // Blue 500
+            "#10B981", // Emerald 500
+            "#8B5CF6", // Violet 500
+            "#F59E0B", // Amber 500
+            "#EC4899", // Pink 500
+            "#06B6D4", // Cyan 500
+            "#6366F1", // Indigo 500
           ],
 
           async init() {
@@ -170,7 +233,6 @@
                 this.currentCategory = this.categories[0];
             } catch (error) {
               console.error(error);
-              alert("Error de conexión con las preguntas.");
             }
             this.loadCouplesFromStorage();
             this.phase = "setup";
@@ -178,24 +240,24 @@
           },
 
           loadCouplesFromStorage() {
-            const stored = localStorage.getItem("vr_couples");
+            const stored = localStorage.getItem("vr_couples_v2");
             if (stored) this.couples = JSON.parse(stored);
           },
 
           saveCouplesToStorage() {
-            localStorage.setItem("vr_couples", JSON.stringify(this.couples));
+            localStorage.setItem("vr_couples_v2", JSON.stringify(this.couples));
             this.drawWheel();
           },
 
           addCouple() {
             if (!this.newMan.trim() || !this.newWoman.trim()) return;
             if (this.editingId) {
-              const index = this.couples.findIndex(
+              const idx = this.couples.findIndex(
                 (c) => c.id === this.editingId
               );
-              if (index !== -1) {
-                this.couples[index].man = this.newMan;
-                this.couples[index].woman = this.newWoman;
+              if (idx !== -1) {
+                this.couples[idx].man = this.newMan;
+                this.couples[idx].woman = this.newWoman;
               }
               this.editingId = null;
             } else {
@@ -211,10 +273,10 @@
             this.newWoman = "";
           },
 
-          editCouple(couple) {
-            this.newMan = couple.man;
-            this.newWoman = couple.woman;
-            this.editingId = couple.id;
+          editCouple(c) {
+            this.newMan = c.man;
+            this.newWoman = c.woman;
+            this.editingId = c.id;
           },
 
           cancelEdit() {
@@ -231,12 +293,13 @@
 
           startGame() {
             if (this.couples.length < 2) {
-              alert("Necesitas al menos 2 parejas.");
+              // Pequeña animación de error o alerta custom
+              alert("Mínimo 2 parejas para jugar");
               return;
             }
             this.turnHistory = [];
             this.phase = "game";
-            this.wheelRotation %= 360;
+            this.$nextTick(() => this.drawWheel());
           },
 
           spinWheel() {
@@ -244,64 +307,57 @@
             this.isSpinning = true;
             this.phase = "spinning";
 
-            // --- NUEVA LÓGICA CON LÍMITE DE 3 REPETICIONES ---
+            // --- Lógica de Exclusión (Últimas 3 jugadas) ---
             let exclusionId = null;
-
-            // 1. Revisar si las últimas 3 jugadas fueron de la misma pareja.
             if (this.turnHistory.length >= 3) {
               const lastThree = this.turnHistory.slice(-3);
-              const isConsecutive = lastThree.every(
-                (id) => id === lastThree[0]
-              );
-              if (isConsecutive) {
-                exclusionId = lastThree[0]; // Si es así, se excluye a esta pareja.
+              if (lastThree.every((id) => id === lastThree[0])) {
+                exclusionId = lastThree[0];
               }
             }
 
-            // 2. Crear una lista de parejas elegibles.
-            let eligibleCouples = this.couples;
+            let pool = this.couples;
             if (exclusionId) {
-              eligibleCouples = this.couples.filter(
-                (c) => c.id !== exclusionId
-              );
+              pool = this.couples.filter((c) => c.id !== exclusionId);
             }
+            if (pool.length === 0) pool = this.couples;
 
-            // 3. Fallback: Si la exclusión no deja a nadie (improbable), se ignora la regla.
-            if (eligibleCouples.length === 0) {
-              eligibleCouples = this.couples;
-            }
-
-            // 4. Elegir un ganador aleatorio de la lista de elegibles.
-            const winnerFromPool =
-              eligibleCouples[secureRandom(0, eligibleCouples.length - 1)];
+            // Ganador
+            const winner = pool[secureRandom(0, pool.length - 1)];
             const winnerIndex = this.couples.findIndex(
-              (c) => c.id === winnerFromPool.id
+              (c) => c.id === winner.id
             );
-            // --- FIN DE LA NUEVA LÓGICA ---
-
-            this.selectedCoupleIndex = winnerIndex;
             this.selectedCouple = this.couples[winnerIndex];
 
-            // 5. Actualizar el historial con el nuevo ganador.
+            // Historial
             this.turnHistory.push(this.selectedCouple.id);
-            if (this.turnHistory.length > 10) {
-              // Mantenemos el historial con un tamaño razonable
-              this.turnHistory.shift();
-            }
+            if (this.turnHistory.length > 10) this.turnHistory.shift();
 
+            // --- CÁLCULO DE GIRO CONSTANTE ---
             const total = this.couples.length;
-            const segmentAngle = 360 / total;
-            const targetAngle = 360 - winnerIndex * segmentAngle;
+            const segment = 360 / total;
+            const targetAngle = 360 - winnerIndex * segment;
+            // Offset aleatorio para que no caiga siempre en el centro del segmento
             const randomOffset =
-              Math.random() * (segmentAngle * 0.8) + segmentAngle * 0.1;
-            const spins = 5 + secureRandom(0, 3);
+              Math.random() * (segment * 0.8) + segment * 0.1;
+            const finalTarget = targetAngle - randomOffset;
 
-            this.wheelRotation = 360 * spins + targetAngle - randomOffset;
+            const currentRot = this.wheelRotation;
+            const currentMod = currentRot % 360;
 
+            let distance = finalTarget - currentMod;
+            if (distance <= 0) distance += 360;
+
+            // SIEMPRE 8 vueltas rápidas + ajuste
+            const fixedSpins = 8;
+
+            this.wheelRotation = currentRot + 360 * fixedSpins + distance;
+
+            // Esperar animación (CSS transition duration)
             setTimeout(() => {
               this.isSpinning = false;
               this.phase = "choice";
-            }, 5000);
+            }, 4000); // 4s para un giro rápido y enérgico
           },
 
           selectType(type) {
@@ -315,6 +371,8 @@
               const list = this.db[this.currentCategory][this.selectedType];
               this.currentChallengeText =
                 list[secureRandom(0, list.length - 1)];
+            } else {
+              this.currentChallengeText = "Error cargando reto.";
             }
           },
 
@@ -324,308 +382,411 @@
             this.selectedType = null;
           },
 
-          escapeHtml(str) {
+          returnToLobby() {
+            if (confirm("¿Volver a editar parejas?")) {
+              this.phase = "setup";
+            }
+          },
+
+          // --- SVG Drawing Utilities ---
+          polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+            return {
+              x: centerX + radius * Math.cos(angleInRadians),
+              y: centerY + radius * Math.sin(angleInRadians),
+            };
+          },
+
+          describeArc(x, y, radius, startAngle, endAngle) {
+            const start = this.polarToCartesian(x, y, radius, endAngle);
+            const end = this.polarToCartesian(x, y, radius, startAngle);
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+            return [
+              "M",
+              start.x,
+              start.y,
+              "A",
+              radius,
+              radius,
+              0,
+              largeArcFlag,
+              0,
+              end.x,
+              end.y,
+              "L",
+              x,
+              y,
+              "L",
+              start.x,
+              start.y,
+            ].join(" ");
+          },
+
+          escapeHtml(text) {
             const map = {
               "&": "&amp;",
               "<": "&lt;",
               ">": "&gt;",
               '"': "&quot;",
-              "'": "&#39;",
+              "'": "&#039;",
             };
-            return str.replace(/[&<>"']/g, (m) => map[m]);
-          },
-
-          arcPath(x, y, r, start, end) {
-            const s = ((start - 90) * Math.PI) / 180;
-            const e = ((end - 90) * Math.PI) / 180;
-            const x1 = x + r * Math.cos(s);
-            const y1 = y + r * Math.sin(s);
-            const x2 = x + r * Math.cos(e);
-            const y2 = y + r * Math.sin(e);
-            return `M ${x} ${y} L ${x1} ${y1} A ${r} ${r} 0 ${
-              end - start > 180 ? 1 : 0
-            } 1 ${x2} ${y2} Z`;
+            return text.replace(/[&<>"']/g, function (m) {
+              return map[m];
+            });
           },
 
           drawWheel() {
-            const wheel = this.$refs.wheelSvg;
-            if (!wheel) return;
+            const svg = this.$refs.wheelSvg;
+            if (!svg) return;
+            svg.innerHTML = "";
 
-            wheel.innerHTML = "";
             const total = this.couples.length;
             if (total === 0) return;
 
-            const step = 360 / total;
-            const radius = 48;
+            const radius = 50;
+            const center = 50;
+            const angleStep = 360 / total;
 
-            for (let i = 0; i < total; i++) {
-              const couple = this.couples[i];
-              const start = i * step;
-              const end = start + step;
+            this.couples.forEach((couple, i) => {
+              const startAngle = i * angleStep;
+              const endAngle = startAngle + angleStep;
 
-              wheel.insertAdjacentHTML(
-                "beforeend",
-                `<path d="${this.arcPath(50, 50, radius, start, end)}" fill="${
-                  couple.color
-                }"></path>`
+              // Segmento
+              const path = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "path"
+              );
+              path.setAttribute(
+                "d",
+                this.describeArc(center, center, radius, startAngle, endAngle)
+              );
+              path.setAttribute("fill", couple.color);
+              path.setAttribute("stroke", "#1f2937"); // Dark border
+              path.setAttribute("stroke-width", "0.5");
+              svg.appendChild(path);
+
+              // Texto (Nombres)
+              const midAngle = startAngle + angleStep / 2;
+              // Posición del texto un poco más afuera del centro
+              const textPos = this.polarToCartesian(
+                center,
+                center,
+                radius * 0.65,
+                midAngle
               );
 
-              const mid = start + step / 2;
-              const r = 30;
-              const rad = ((mid - 90) * Math.PI) / 180;
-              const tx = 50 + r * Math.cos(rad);
-              const ty = 50 + r * Math.sin(rad);
-
-              const nameText = this.escapeHtml(
-                `${couple.man} & ${couple.woman}`
+              const text = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "text"
               );
-              const fontSize = total > 6 ? 3.5 : total > 4 ? 4.5 : 5.5;
-
-              wheel.insertAdjacentHTML(
-                "beforeend",
-                `<text x="${tx}" y="${ty}" font-size="${fontSize}" fill="white" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(${mid}, ${tx}, ${ty})">${nameText}</text>`
+              text.setAttribute("x", textPos.x);
+              text.setAttribute("y", textPos.y);
+              text.setAttribute("fill", "white");
+              text.setAttribute(
+                "font-size",
+                total > 8 ? "3" : total > 4 ? "4" : "5"
               );
-            }
+              text.setAttribute("font-weight", "900");
+              text.setAttribute("text-anchor", "middle");
+              text.setAttribute("dominant-baseline", "middle");
+              text.setAttribute(
+                "transform",
+                `rotate(${midAngle}, ${textPos.x}, ${textPos.y})`
+              );
+
+              // Solo mostramos iniciales si hay muchos, o nombre corto
+              const label = `${couple.man} & ${couple.woman}`;
+              text.textContent =
+                label.length > 15 ? label.substring(0, 12) + "..." : label;
+
+              svg.appendChild(text);
+            });
           },
         }));
       });
     </script>
 
+    <!-- Background Elements -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
     <div
-      x-data="gameLogic"
-      class="min-h-screen flex flex-col items-center justify-center p-4 relative"
-    >
-      <h1
-        class="text-4xl md:text-6xl font-black mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 drop-shadow-sm"
-      >
-        VERDAD O RETO<br />
-        <span
-          class="text-xl md:text-2xl text-white/80 font-light tracking-widest"
-          >EDICIÓN PAREJAS</span
-        >
-      </h1>
+      class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 z-0 pointer-events-none"
+    ></div>
 
-      <!-- SETUP -->
+    <div x-data="gameLogic" class="relative z-10 w-full h-full flex flex-col">
+      <!-- HEADER (Solo visible en Juego) -->
+      <div
+        x-show="phase !== 'setup'"
+        class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-30"
+        x-cloak
+        x-transition
+      >
+        <button
+          @click="returnToLobby"
+          class="text-white/40 hover:text-white transition"
+        >
+          <i class="fas fa-chevron-left text-xl"></i>
+        </button>
+        <div
+          class="glass px-3 py-1 rounded-full text-xs font-bold tracking-widest text-white/50 uppercase"
+        >
+          Edición Parejas
+        </div>
+      </div>
+
+      <!-- ======================= -->
+      <!-- VIEW: SETUP (LOBBY) -->
+      <!-- ======================= -->
       <div
         x-show="phase === 'setup'"
-        x-transition
-        class="w-full max-w-lg glass-panel p-6 rounded-3xl"
+        x-transition.opacity.duration.500ms
+        class="flex-1 flex flex-col p-6 overflow-y-auto"
       >
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold">Jugadores</h2>
-          <span class="text-xs bg-white/10 px-2 py-1 rounded text-white/60"
-            >Auto-guardado</span
+        <div class="mt-8 mb-6">
+          <h1
+            class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500 leading-tight"
           >
+            VERDAD<br />O RETO
+          </h1>
+          <p class="text-white/60 text-lg mt-2">
+            Agrega a los jugadores para comenzar.
+          </p>
         </div>
 
-        <div class="space-y-4 mb-6">
-          <div class="flex gap-2">
-            <input
-              type="text"
-              x-model="newMan"
-              placeholder="Él"
-              class="w-1/2 p-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-pink-500 outline-none"
-            />
-            <input
-              type="text"
-              x-model="newWoman"
-              placeholder="Ella"
-              class="w-1/2 p-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-pink-500 outline-none"
-            />
-          </div>
-          <div class="flex gap-2">
-            <button
-              x-show="editingId"
-              @click="cancelEdit"
-              class="w-1/3 bg-gray-600 rounded-xl font-bold py-3 hover:bg-gray-500 transition"
-            >
-              Cancelar
-            </button>
-            <button
-              @click="addCouple"
-              class="flex-1 bg-pink-600 hover:bg-pink-500 py-3 rounded-xl font-bold transition"
-            >
-              <span
-                x-text="editingId ? 'Guardar Cambios' : 'Agregar Pareja'"
-              ></span>
-            </button>
-          </div>
-        </div>
-
-        <div class="space-y-2 max-h-60 overflow-y-auto mb-6 custom-scrollbar">
+        <!-- Listado de Parejas (Cards) -->
+        <div class="flex-1 space-y-3 mb-4 overflow-y-auto pb-20 no-scrollbar">
           <template x-for="(c, i) in couples" :key="c.id">
             <div
-              class="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5"
+              class="glass flex items-center justify-between p-4 rounded-2xl border-l-4"
+              :style="`border-left-color: ${c.color}`"
             >
-              <div class="flex items-center gap-3">
-                <div
-                  :style="`background:${c.color}`"
-                  class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow"
-                >
-                  <span x-text="i+1"></span>
+              <div>
+                <div class="text-sm text-gray-400 mb-1">
+                  Pareja <span x-text="i+1"></span>
                 </div>
-                <div class="text-sm">
-                  <span class="text-blue-300 font-bold" x-text="c.man"></span> &
-                  <span class="text-pink-300 font-bold" x-text="c.woman"></span>
+                <div class="font-bold text-lg leading-none">
+                  <span class="text-white" x-text="c.man"></span>
+                  <span class="text-pink-500 mx-1">&</span>
+                  <span class="text-white" x-text="c.woman"></span>
                 </div>
               </div>
-              <div class="flex gap-1">
+              <div class="flex gap-3">
                 <button
                   @click="editCouple(c)"
-                  class="p-2 text-blue-300 hover:bg-white/10 rounded"
+                  class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-blue-400"
                 >
                   <i class="fas fa-pencil"></i>
                 </button>
                 <button
                   @click="removeCouple(c.id)"
-                  class="p-2 text-red-400 hover:bg-white/10 rounded"
+                  class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-red-400"
                 >
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
             </div>
           </template>
+
+          <div
+            x-show="couples.length === 0"
+            class="text-center py-10 text-white/20 italic border-2 border-dashed border-white/10 rounded-2xl"
+          >
+            No hay parejas aún
+          </div>
         </div>
 
-        <button
-          @click="startGame"
-          :disabled="couples.length < 2"
-          class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 py-4 rounded-xl font-black text-xl shadow-lg hover:scale-[1.02] transition disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
-        >
-          ¡A JUGAR!
-        </button>
+        <!-- Fixed Bottom Input Area -->
+        <div class="fixed bottom-0 left-0 w-full glass-card p-4 pb-8 z-50">
+          <div class="flex gap-2 mb-3">
+            <input
+              type="text"
+              x-model="newMan"
+              placeholder="Él"
+              class="w-1/2 bg-black/40 border-0 rounded-xl p-4 text-white placeholder-white/30 focus:ring-2 focus:ring-pink-500 outline-none text-lg"
+            />
+            <input
+              type="text"
+              x-model="newWoman"
+              placeholder="Ella"
+              class="w-1/2 bg-black/40 border-0 rounded-xl p-4 text-white placeholder-white/30 focus:ring-2 focus:ring-purple-500 outline-none text-lg"
+            />
+          </div>
+          <div class="flex gap-2 h-14">
+            <button
+              x-show="editingId"
+              @click="cancelEdit"
+              class="w-16 bg-gray-700 rounded-xl text-white font-bold"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+            <button
+              @click="addCouple"
+              class="flex-1 bg-white text-black rounded-xl font-black text-lg uppercase tracking-wider hover:bg-gray-200 transition"
+            >
+              <span x-text="editingId ? 'Actualizar' : 'Agregar'"></span>
+            </button>
+            <button
+              @click="startGame"
+              :disabled="couples.length < 2"
+              class="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl font-black text-lg uppercase tracking-wider shadow-lg shadow-purple-500/30 disabled:opacity-50 disabled:shadow-none"
+            >
+              Jugar
+            </button>
+          </div>
+        </div>
       </div>
 
-      <!-- JUEGO / RULETA -->
+      <!-- ======================= -->
+      <!-- VIEW: GAME (RULETA) -->
+      <!-- ======================= -->
       <div
         x-show="phase === 'game' || phase === 'spinning' || phase === 'choice'"
-        x-transition
-        class="flex flex-col items-center w-full"
+        x-cloak
+        class="flex-1 flex flex-col items-center justify-center relative"
       >
-        <div class="flex flex-wrap justify-center gap-2 mb-8 z-20">
-          <template x-for="cat in categories" :key="cat">
+        <!-- Selector de Categoría (Top Floating) -->
+        <div
+          class="absolute top-16 left-0 w-full overflow-x-auto no-scrollbar px-6 z-20 flex gap-3 justify-center"
+        >
+          <template x-for="(cat, index) in categories" :key="cat">
             <button
               @click="currentCategory = cat"
-              class="px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider transition border border-white/20"
-              :class="currentCategory === cat ? 'bg-white text-purple-900 scale-105' : 'bg-black/40 text-white/60 hover:bg-black/60'"
+              class="px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wider transition whitespace-nowrap border-2"
+              :class="currentCategory === cat 
+                ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.4)]' 
+                : 'bg-black/50 text-white/80 border-white/30 hover:bg-black/70 hover:border-white/50'"
+              :style="`z-index: ${categories.length - index};`"
               x-text="cat"
             ></button>
           </template>
         </div>
 
-        <div class="wheel-wrap">
-          <div class="pointer"></div>
+        <!-- La Ruleta Gigante -->
+        <div class="wheel-container">
+          <!-- Flecha Marcadora -->
+          <div class="pointer-arrow text-white text-5xl drop-shadow-xl">
+            <i class="fas fa-caret-down text-[#fbbf24]"></i>
+          </div>
 
+          <!-- SVG -->
           <svg
             x-ref="wheelSvg"
             viewBox="0 0 100 100"
-            class="w-full h-full rounded-full shadow-2xl"
-            :style="`transform: rotate(${wheelRotation}deg); transition: ${isSpinning ? 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none'};`"
+            class="w-full h-full rounded-full"
+            :style="`transform: rotate(${wheelRotation}deg); transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1.05);`"
           ></svg>
 
-          <div
-            x-show="phase === 'game'"
-            @click="spinWheel"
-            class="centerBtn"
-            x-transition
-          >
-            <i class="fas fa-sync-alt text-2xl mb-1"></i>
-            <span class="text-lg uppercase">Girar</span>
+          <!-- Botón Central (Cap) -->
+          <div @click="spinWheel" class="spin-btn group">
+            <div class="text-center transition group-active:scale-90">
+              <div
+                x-show="!isSpinning"
+                class="text-gray-900 font-black text-xl md:text-2xl uppercase tracking-tighter leading-none"
+              >
+                GIRAR
+              </div>
+              <div
+                x-show="isSpinning"
+                class="text-pink-600 animate-spin text-2xl"
+              >
+                <i class="fas fa-circle-notch"></i>
+              </div>
+            </div>
           </div>
         </div>
 
         <p
-          x-show="phase === 'spinning'"
-          class="mt-8 text-2xl font-bold animate-bounce text-yellow-300"
-          x-transition
+          class="absolute bottom-12 text-white/30 text-xs font-bold tracking-[0.2em] uppercase animate-pulse"
+          x-show="!isSpinning"
         >
-          ¡Girando la ruleta!
+          Toca el centro para girar
         </p>
       </div>
 
-      <!-- MODAL ELECCIÓN -->
+      <!-- ======================= -->
+      <!-- MODAL: ELECCIÓN -->
+      <!-- ======================= -->
       <div
         x-show="phase === 'choice'"
-        x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+        class="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center p-6"
+        x-transition.opacity
       >
+        <div class="text-center mb-10 pop-in">
+          <p class="text-gray-400 text-lg uppercase tracking-widest mb-2">
+            Es el turno de
+          </p>
+          <h2 class="text-5xl font-black text-white leading-tight">
+            <span x-text="selectedCouple ? selectedCouple.man : ''"></span>
+            <span class="text-pink-500">&</span><br />
+            <span x-text="selectedCouple ? selectedCouple.woman : ''"></span>
+          </h2>
+        </div>
+
         <div
-          class="glass-panel p-8 rounded-3xl max-w-md w-full text-center"
-          x-transition:enter="transition ease-out duration-300"
-          x-transition:enter-start="scale-90 opacity-0"
-          x-transition:enter-end="scale-100 opacity-100"
+          class="w-full max-w-sm space-y-4 pop-in"
+          style="animation-delay: 0.1s"
         >
-          <h3 class="text-3xl font-bold mb-2">
-            ¡Turno de
-            <span
-              class="text-yellow-400"
-              x-text="selectedCouple ? selectedCouple.man : ''"
-            ></span>
-            y
-            <span
-              class="text-pink-400"
-              x-text="selectedCouple ? selectedCouple.woman : ''"
-            ></span
-            >!
-          </h3>
-          <p class="text-white/60 mb-8">Elige tu destino...</p>
-          <div class="grid grid-cols-2 gap-4">
-            <button
-              @click="selectType('verdad')"
-              class="bg-blue-600 hover:bg-blue-500 p-6 rounded-2xl transition transform hover:-translate-y-1 shadow-xl"
-            >
-              <div class="text-4xl mb-2">
-                <i class="fas fa-comment-dots"></i>
-              </div>
-              <div class="font-bold text-lg">VERDAD</div>
-            </button>
-            <button
-              @click="selectType('reto')"
-              class="bg-red-600 hover:bg-red-500 p-6 rounded-2xl transition transform hover:-translate-y-1 shadow-xl"
-            >
-              <div class="text-4xl mb-2"><i class="fas fa-fire"></i></div>
-              <div class="font-bold text-lg">RETO</div>
-            </button>
-          </div>
+          <button
+            @click="selectType('verdad')"
+            class="w-full h-24 bg-gradient-to-r from-blue-600 to-blue-400 rounded-3xl flex items-center justify-between px-8 shadow-lg shadow-blue-500/30 active:scale-95 transition transform"
+          >
+            <span class="text-3xl font-black italic">VERDAD</span>
+            <i class="fas fa-comment-dots text-4xl text-white/80"></i>
+          </button>
+          <button
+            @click="selectType('reto')"
+            class="w-full h-24 bg-gradient-to-r from-red-600 to-pink-600 rounded-3xl flex items-center justify-between px-8 shadow-lg shadow-red-500/30 active:scale-95 transition transform"
+          >
+            <span class="text-3xl font-black italic">RETO</span>
+            <i class="fas fa-fire text-4xl text-white/80"></i>
+          </button>
         </div>
       </div>
 
-      <!-- MODAL RESULTADO -->
+      <!-- ======================= -->
+      <!-- MODAL: RESULTADO -->
+      <!-- ======================= -->
       <div
         x-show="phase === 'result'"
-        x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+        class="fixed inset-0 z-50 bg-[#0f172a] flex flex-col"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="translate-y-full"
+        x-transition:enter-end="translate-y-0"
       >
-        <div
-          class="bg-[#1e1e2e] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-white/10"
-          x-transition:enter="transition ease-out duration-500"
-          x-transition:enter-start="translate-y-full opacity-0"
-          x-transition:enter-end="translate-y-0 opacity-100"
-        >
+        <!-- Header Resultado -->
+        <div class="p-8 pb-0 pt-12 text-center">
           <div
-            :class="selectedType === 'verdad' ? 'bg-blue-600' : 'bg-red-600'"
-            class="p-4 text-center font-bold tracking-widest text-lg uppercase shadow-lg"
+            class="inline-block px-4 py-2 rounded-full text-sm font-bold tracking-widest uppercase mb-4"
+            :class="selectedType === 'verdad' ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'"
           >
             <i
               :class="selectedType === 'verdad' ? 'fas fa-comment-dots' : 'fas fa-fire'"
               class="mr-2"
             ></i>
-            <span x-text="selectedType"></span> -
-            <span x-text="currentCategory"></span>
+            <span x-text="selectedType"></span>
           </div>
-          <div class="p-10 text-center">
-            <p
-              class="text-2xl md:text-3xl font-medium leading-relaxed neon-text mb-8"
-              x-text="currentChallengeText"
-            ></p>
-            <button
-              @click="nextTurn"
-              class="bg-gradient-to-r from-purple-500 to-pink-500 text-white w-full py-4 rounded-xl font-bold hover:scale-105 transition shadow-lg"
-            >
-              <i class="fas fa-arrow-right mr-2"></i>
-              Continuar
-            </button>
-          </div>
+          <h2
+            class="text-3xl font-bold text-white/50"
+            x-text="currentCategory"
+          ></h2>
+        </div>
+
+        <!-- Contenido del Reto -->
+        <div class="flex-1 flex items-center justify-center p-8">
+          <p
+            class="text-3xl md:text-4xl font-black text-center leading-normal text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+            x-text="currentChallengeText"
+          ></p>
+        </div>
+
+        <!-- Botón Continuar -->
+        <div class="p-6 pb-12">
+          <button
+            @click="nextTurn"
+            class="w-full bg-white text-black py-6 rounded-2xl font-black text-xl uppercase tracking-widest hover:scale-[1.02] transition shadow-2xl"
+          >
+            Siguiente Turno
+          </button>
         </div>
       </div>
     </div>
